@@ -177,9 +177,6 @@
          */
         abort: function () {
             rec.abort();
-
-            // Clean final transcript.
-            _setFinalTranscript('');
         },
 
 
@@ -188,9 +185,6 @@
          */
         stop: function () {
             rec.stop();
-
-            // Clean final transcript.
-            _setFinalTranscript('');
         },
 
 
@@ -283,6 +277,8 @@
      */
     rec.onend = function () {
         _setIsListening(false);
+        // Clean final transcript.
+        _setFinalTranscript('');
         _logger('info', 'Stop listening... ');
         _invokeCallbacks(ON_END, event);
     }
