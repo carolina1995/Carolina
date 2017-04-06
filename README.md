@@ -32,6 +32,8 @@ How to use this library
         Carolina.init({
             lang: 'he',
             debug: true,
+            continuous: false,
+            interimResults: false,
             callbacks: {
                 context: this,
                 onStart: function (args) { console.log('ON_START:: Callback => ', args); },
@@ -39,6 +41,7 @@ How to use this library
                 onEnd: function (args) { console.log('ON_END:: Callback => ', args); },
                 onLiveStream: function (args) { console.log('ON_LIVE_STREAM:: Callback => ', args); },
                 onChunkStream: function (args) { console.log('ON_CHUNK_STREAM:: Callback => ', args); },
+                onInterimTranscript: function(args) { console.log('ON_INTERIM_TRANSCRIPT:: Callback => ', args) }
             }
         });
 

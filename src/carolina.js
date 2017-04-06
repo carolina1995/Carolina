@@ -13,9 +13,6 @@
      */
     var rec = new webkitSpeechRecognition();
 
-    rec.continuous = true;
-    rec.interimResults = true;
-
     /**
      * @property
      * @private
@@ -63,7 +60,8 @@
         ON_END = 'onEnd',
         ON_ERROR = 'onError',
         ON_LIVE_STREAM = 'onLiveStream',
-        ON_CHUNK_STREAM = 'onChunkStream';
+        ON_CHUNK_STREAM = 'onChunkStream',
+        ON_INTERIM_TRANSCRIPT = 'onInterimTranscript';
 
 
     /**
@@ -244,19 +242,22 @@
         var interim_transcript = '';
 
         for (var i = event.resultIndex; i < event.results.length; ++i) {
+            var chunkTranscript = event.results[i][0].transcript;
+
             if (event.results[i].isFinal) {
-                _final_transcript += event.results[i][0].transcript;
+                _final_transcript += chunkTranscript;
+                _logger('debug', 'Recevied new chunk transcript from user speaking => ', chunkTranscript);
+                _invokeCallbacks(ON_CHUNK_STREAM, chunkTranscript);
             } else {
-                interim_transcript += event.results[i][0].transcript;
+                interim_transcript += chunkTranscript;
+                _logger('debug', 'Interim transcript current speaking value => ', interim_transcript);
+                _invokeCallbacks(ON_INTERIM_TRANSCRIPT, interim_transcript);
             }
         }
 
         _final_transcript = _final_transcript;
-
-        _logger('debug', 'Final continues speaking stream string => ', _final_transcript);
-        _logger('debug', 'Interim transcript current speaking value => ', interim_transcript);
+        _logger('debug', 'Live stream of transcript => ', _final_transcript);
         _invokeCallbacks(ON_LIVE_STREAM, _final_transcript);
-        _invokeCallbacks(ON_CHUNK_STREAM, interim_transcript);
     }
 
 
@@ -293,8 +294,11 @@
          * @function
          */
         init: function (options) {
-            if (_ran)
-                return console.log('You can init only once.');
+            if (_ran) {
+                _logger('error', 'You can init only once');
+                return;
+            }
+
 
             _ran = true;
 
@@ -302,7 +306,10 @@
 
             _isDebug = 'boolean' === typeof options.debug ? options.debug : false;
 
-            rec.lang = _options.lang;
+            // Configure browser recognition settings.
+            rec.lang = _options.lang || 'en-US';
+            rec.continuous = _options.continuous || false;
+            rec.interimResults = _options.interimResults || false;
         },
 
 
