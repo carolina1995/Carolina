@@ -1,0 +1,32 @@
+{
+  "name": "carolina-voice-recognition",
+  "version": "1.0.0",
+  "description": "Tiny library to manage voice recognition via javascript, using chrome webkit and support for hybrid cordova applications.",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "gulp",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sayeko/Carolina.git"
+  },
+  "keywords": [
+    "voice",
+    "recognition",
+    "voice",
+    "recognition",
+    "javascript"
+  ],
+  "author": " <sayeko.git@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sayeko/Carolina/issues"
+  },
+  "homepage": "https://github.com/sayeko/Carolina#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-uglify": "^2.0.1"
+  }
+}

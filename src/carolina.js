@@ -24,7 +24,25 @@
          * @property
          * @private
          */
-        _options,
+        _options = {
+            toString: function () {
+                var str = '\n';
+
+                Object.keys(this).map((function(key, index, arr) {
+                    if (key === 'toString') {
+                        return;
+                    }
+
+                    str += key + ' => ' + this[key];
+
+                    if (index !== arr.length - 1) {
+                        str += '\n';
+                    }
+                }).bind(this));
+
+                return str;
+            }
+        },
 
 
         /**
@@ -52,7 +70,7 @@
          * @property
          * @private
          */
-        _final_transcript;
+        _final_transcript = '';
 
 
     // Callbacks constants.
@@ -61,7 +79,15 @@
         ON_ERROR = 'onError',
         ON_LIVE_STREAM = 'onLiveStream',
         ON_CHUNK_STREAM = 'onChunkStream',
-        ON_INTERIM_TRANSCRIPT = 'onInterimTranscript';
+        ON_INTERIM_TRANSCRIPT = 'onInterimTranscript',
+        ON_SOUND_START = 'onSoundStart',
+        ON_NO_MATCH = 'onNoMatch',
+        ON_SOUND_END = 'onSoundEnd',
+        ON_SPEECH_START = 'onSpeechStart',
+        ON_SPEECH_END = 'onSpeechEnd';
+
+    // API Event functions.
+    const ON_RESULT = 'ON_RESULT';
 
 
     /**
@@ -124,7 +150,34 @@
             return;
         }
 
-        return console[type]('CAROLINA::' + msg, args);
+        if (Array.isArray(args) && args.length > 0) {
+            console[type]('CAROLINA::' + msg, args);
+            return;
+        }
+
+        console[type]('CAROLINA::' + msg);
+    }
+
+
+    /**
+     * Function invoke profiler for monitoring preformence.
+     */
+    var _profiler = function (method) {
+        var _start,
+            _end;
+
+        return {
+            start: function () {
+                _start = new Date();
+            },
+
+            end: function () {
+                _end = new Date();
+                var duration = _end.getTime() - _start.getTime();
+
+                _logger('debug', `${method} took ${duration} ms to execute`);
+            }
+        }
     }
 
 
@@ -151,6 +204,143 @@
         }
 
         cbs[cbName].apply(cbs.context, args);
+    }
+
+
+    /**
+     * API Event function when we get notify by google about the voice recogniton text and confidence.
+     * 
+     * @function
+     * @param {*} event 
+     */
+    var _onResult = function (event) {
+        var interim_transcript = '',
+            profiler = new _profiler(ON_RESULT);
+
+        // Start profling and monitoring function execution.
+        profiler.start();
+
+        for (var i = event.resultIndex; i < event.results.length; ++i) {
+            var chunkTranscript = event.results[i][0].transcript,
+                confidence = event.results[i][0].confidence;
+
+            if (_options.quality !== Math.round(confidence)) {
+                _logger('warn', 'The transcript we got is not confidence enough due to your quality restrictions. ', chunkTranscript);
+                return;
+            }
+
+            if (event.results[i].isFinal) {
+                _final_transcript += chunkTranscript;
+                _logger('debug', 'Recevied new chunk transcript from user speaking text value & confidence => ', chunkTranscript, confidence);
+                _invokeCallbacks(ON_CHUNK_STREAM, chunkTranscript);
+            } else {
+                interim_transcript += chunkTranscript;
+                _logger('debug', 'Interim transcript current speaking value => ', interim_transcript);
+                _invokeCallbacks(ON_INTERIM_TRANSCRIPT, interim_transcript);
+            }
+        }
+
+        _final_transcript = _final_transcript;
+        _logger('debug', 'Live stream of transcript => ', _final_transcript);
+        _invokeCallbacks(ON_LIVE_STREAM, _final_transcript);
+
+        // End profling and monitoring function execution.
+        profiler.end();
+    }
+
+
+    /**
+     * API Event function when the service is start listening.
+     * 
+     * @function
+     */
+    var _onStart = function () {
+        _setIsListening(true);
+        _logger('debug', 'Start listening... ');
+        _invokeCallbacks(ON_START);
+    }
+
+
+    /**
+     * API Event function when the service got error.
+     * 
+     * @function
+     */
+    var _onError = function (event) {
+        // Increase the library error counter this should represent the library condition health.
+        _errorCount++;
+        _setIsListening(false);
+        _logger('error', 'An error been occured => ', event);
+        _invokeCallbacks(ON_ERROR, event);
+    }
+
+
+    /**
+     * API Event function when the service is end talking.
+     * 
+     * @function
+     */
+    var _onEnd = function (event) {
+        _setIsListening(false);
+        // Clean final transcript.
+        _setFinalTranscript('');
+        _logger('info', 'Stop listening... ');
+        _invokeCallbacks(ON_END, event);
+    }
+
+
+    /**
+     * API Event function when the service start sound.
+     * 
+     * @param {*} event 
+     */
+    var _onSoundStart = function (event) {
+        _logger('debug', 'Sound recognisable speech or not has been detected');
+        _invokeCallbacks(ON_SOUND_START, event);
+    }
+
+
+    /**
+     * API Event function when the service is not getting any match.
+     * 
+     * @param {*} event 
+     */
+    var _onNoMatch = function (event) {
+        _logger('debug', 'Speech recognition service returns a final result with no significant recognition. This may involve some degree of recognition, which doesnt meet or exceed the confidence threshold.');
+        _invokeCallbacks(ON_NO_MATCH, event);
+    }
+
+
+    /**
+     * API Event function when the service sound end.
+     * 
+     * @param {*} event 
+     */
+    var _onSoundEnd = function (event) {
+        _logger('debug', 'Any sound recognisable speech or not has stopped being detected.');
+        _invokeCallbacks(ON_SOUND_END, event);
+    }
+
+
+    /**
+     * API Event function when the service speech start
+     * 
+     * @param {*} event 
+     */
+    var _onSpeechStart = function (event) {
+        _logger('debug', 'A sound that is recognised by the speech recognition service as speech has been detected.');
+        _invokeCallbacks(ON_SPEECH_START, event);
+    }
+
+
+    /**
+     * API Event function when the service speech end.
+     * 
+     * @param {*} event 
+     */
+    var _onSpeechEnd = function (event) {
+        _logger('debug', 'Speech recognised by the speech recognition service has stopped being detected.');
+        _invokeCallbacks(ON_SPEECH_END, event);
     }
 
 
@@ -187,12 +377,22 @@
 
 
         /**
+         * This function cleaning the stream.
+         * 
+         * @function
+         */
+        clearStream: function () {
+            _setFinalTranscript('');
+        },
+
+
+        /**
          * Print to the user about the library current state, health and configuration.
          *
          * @function
          */
         doctor: function () {
-            var doctorReport = '<h3>Library Status Health</h3>'
+            var doctorReport = 'Library Status Health'
                 +
                 '\n'
                 +
@@ -200,11 +400,15 @@
                 +
                 '\n'
                 +
-                `Configuration details are: ${JSON.stringify(_options)}`
+                `configuration details are: ${_options.toString()}`
                 +
                 '\n'
                 +
-                `Library health condition ${_errorCount > 3 ? 'Poor' : 'Good'}`
+                `library health condition ${_errorCount > 3 ? 'POOR' : 'GOOD'}`
+                +
+                '\n'
+                +
+                `quality of speaking ${_options.quality === 1 ? 'GOOD' : 'POOR'}`
 
             _logger('info', doctorReport);
         },
@@ -225,11 +429,7 @@
     /**
      * User start speaking callback handler.
      */
-    rec.onstart = function () {
-        _setIsListening(true);
-        _logger('debug', 'Start listening... ');
-        _invokeCallbacks(ON_START);
-    }
+    rec.onstart = _onStart;
 
 
     /**
@@ -238,51 +438,50 @@
      * @function
      * @private
      */
-    rec.onresult = function (event) {
-        var interim_transcript = '';
-
-        for (var i = event.resultIndex; i < event.results.length; ++i) {
-            var chunkTranscript = event.results[i][0].transcript;
-
-            if (event.results[i].isFinal) {
-                _final_transcript += chunkTranscript;
-                _logger('debug', 'Recevied new chunk transcript from user speaking => ', chunkTranscript);
-                _invokeCallbacks(ON_CHUNK_STREAM, chunkTranscript);
-            } else {
-                interim_transcript += chunkTranscript;
-                _logger('debug', 'Interim transcript current speaking value => ', interim_transcript);
-                _invokeCallbacks(ON_INTERIM_TRANSCRIPT, interim_transcript);
-            }
-        }
-
-        _final_transcript = _final_transcript;
-        _logger('debug', 'Live stream of transcript => ', _final_transcript);
-        _invokeCallbacks(ON_LIVE_STREAM, _final_transcript);
-    }
+    rec.onresult = _onResult;
 
 
     /**
      * Library enounter in error callback handler.
      */
-    rec.onerror = function (event) {
-        // Increase the library error counter this should represent the library condition health.
-        _errorCount++;
-        _setIsListening(false);
-        _logger('error', 'An error been occured => ', event);
-        _invokeCallbacks(ON_ERROR, event);
-    }
+    rec.onerror = _onError;
 
 
     /**
      * User stop speaking callback handler.
      */
-    rec.onend = function () {
-        _setIsListening(false);
-        // Clean final transcript.
-        _setFinalTranscript('');
-        _logger('info', 'Stop listening... ');
-        _invokeCallbacks(ON_END, event);
-    }
+    rec.onend = _onEnd;
+
+
+    /**
+     * Fired when the speech recognition service returns a final result with no significant recognition. 
+     * This may involve some degree of recognition, which doesn't meet or exceed the confidence threshold.
+     */
+    rec.onnomatch = _onNoMatch;
+
+
+    /**
+     * Fired when any sound — recognisable speech or not — has been detected.
+     */
+    rec.onsoundstart = _onSoundStart;
+
+
+    /**
+     * Fired when any sound — recognisable speech or not — has stopped being detected.
+     */
+    rec.onsoundend = _onSoundEnd;
+
+
+    /**
+     * Fired when sound that is recognised by the speech recognition service as speech has been detected.
+     */
+    rec.onspeechstart = _onSpeechStart;
+
+
+    /**
+     * Fired when speech recognised by the speech recognition service has stopped being detected.
+     */
+    rec.onspeechend = _onSpeechEnd;
 
 
     root.Carolina = {
@@ -299,15 +498,24 @@
                 return;
             }
 
-
+            // Lock the init function for more initialization, this init function should run only once.
             _ran = true;
 
-            _options = Object.assign({}, _options, options);
+            // Set carolina configuration settings.
+            _options = Object.assign({},
+                _options,
+                {
+                    lang: options.lang || 'en-US',
+                    debug: options.debug || false,
+                    quality: options.quality || 1,
+                    callbacks: options.callbacks
+                });
 
+            // Set debug mode indicator from configuration settings.
             _isDebug = 'boolean' === typeof options.debug ? options.debug : false;
 
             // Configure browser recognition settings.
-            rec.lang = _options.lang || 'en-US';
+            rec.lang = _options.lang;
             rec.continuous = _options.continuous || false;
             rec.interimResults = _options.interimResults || false;
         },
@@ -328,7 +536,16 @@
                 return;
             }
 
-            return innerFunctionAPI[method].apply(this, args);
+            var returnVal;
+
+            try {
+                returnVal = innerFunctionAPI[method].apply(this, args);
+            }
+            catch (e) {
+                _logger('error', 'You have been encounter api function exception => ', e);
+            }
+
+            return returnVal;
         }
     }
 })(window);

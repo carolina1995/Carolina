@@ -15,6 +15,7 @@
         Carolina.init({
             lang: 'he',
             debug: true,
+            quality: 1, // Should be 0 to 1, when 0 is the most poor quality and 1 is the heights.
             callbacks: {
                 context: this,
                 onStart: function (args) { console.log('ON_START:: Callback => ', args); },
@@ -22,6 +23,11 @@
                 onEnd: function (args) { console.log('ON_END:: Callback => ', args); },
                 onLiveStream: function (args) { console.log('ON_LIVE_STREAM:: Callback => ', args); },
                 onChunkStream: function (args) { console.log('ON_CHUNK_STREAM:: Callback => ', args); },
+                onSoundStart: function (args) { console.log('ON_SOUND_START:: Callback => ', args); },
+                onNoMatch: function (args) { console.log('ON_NO_MATCH:: Callback => ', args); },
+                onSoundEnd: function (args) { console.log('ON_SOUND_END:: Callback => ', args); },
+                onSpeechStart: function (args) { console.log('ON_SPEECH_START:: Callback => ', args); },
+                onSpeechEnd: function (args) { console.log('ON_SPEECH_END:: Callback => ', args); },
             }
         });
 
