@@ -4,7 +4,7 @@
   "description": "Tiny library to manage voice recognition via javascript, using chrome webkit and support for hybrid cordova applications.",
   "main": "index.js",
   "scripts": {
-    "deploy": "gulp",
+    "deploy": "gulp deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,7 +25,9 @@
   },
   "homepage": "https://github.com/sayeko/Carolina#readme",
   "devDependencies": {
+    "babel-preset-es2015": "^6.24.1",
     "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
     "gulp-concat": "^2.6.1",
     "gulp-uglify": "^2.0.1"
   }
