@@ -75,6 +75,9 @@ How to use this library
     // Clean the current stream while the service on start in still activated most use case to use it, it when you use stream speaking.
     Carolina.fn('cleanStream');
 
+    // A flag that represent when the service is active and listening to user.
+    Carolina.fn('isListening');
+
     // This function represent the status of our library if it health contion, qulity of the service and configuration watch.
     Carolina.fn('doctor');
     </script>
