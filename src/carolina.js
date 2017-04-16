@@ -508,6 +508,8 @@
                     lang: options.lang || 'en-US',
                     debug: options.debug || false,
                     quality: options.quality || 1,
+                    continuous: options.continuous || false,
+                    interimResults: options.interimResults || false,
                     callbacks: options.callbacks
                 });
 
@@ -516,8 +518,8 @@
 
             // Configure browser recognition settings.
             rec.lang = _options.lang;
-            rec.continuous = _options.continuous || false;
-            rec.interimResults = _options.interimResults || false;
+            rec.continuous = _options.continuous;
+            rec.interimResults = _options.interimResults;
         },
 
 

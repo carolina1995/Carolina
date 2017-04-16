@@ -39,6 +39,8 @@ How to use this library
             debug: true,
             continuous: false,
             interimResults: false,
+            quality: 1, // Should be 0 or 1, when 0 is the most poor quality and 1 is the heights.
+            // The callbacks are the lifecycle of the carolina voice recognition service and thier name is very explnatory so there is no point to describe each of them.
             callbacks: {
                 context: this,
                 onStart: function (args) { console.log('ON_START:: Callback => ', args); },
@@ -46,11 +48,35 @@ How to use this library
                 onEnd: function (args) { console.log('ON_END:: Callback => ', args); },
                 onLiveStream: function (args) { console.log('ON_LIVE_STREAM:: Callback => ', args); },
                 onChunkStream: function (args) { console.log('ON_CHUNK_STREAM:: Callback => ', args); },
-                onInterimTranscript: function(args) { console.log('ON_INTERIM_TRANSCRIPT:: Callback => ', args) }
+                onInterimTranscript: function(args) { console.log('ON_INTERIM_TRANSCRIPT:: Callback => ', args) },
+                onSoundStart: function (args) { console.log('ON_SOUND_START:: Callback => ', args); },
+                onNoMatch: function (args) { console.log('ON_NO_MATCH:: Callback => ', args); },
+                onSoundEnd: function (args) { console.log('ON_SOUND_END:: Callback => ', args); },
+                onSpeechStart: function (args) { console.log('ON_SPEECH_START:: Callback => ', args); },
+                onSpeechEnd: function (args) { console.log('ON_SPEECH_END:: Callback => ', args); }
             }
         });
 
         Carolina.fn('start');
+    </script>
+
+    <script>
+    // API!
+
+    // Start the service the browser will ask for the right premission.
+    Carolina.fn('start');
+
+    // Stop the service and call the onEnd event.
+    Carolina.fn('stop');
+
+    // Abort same as the stop behavior , stop the service and kill the webkit chrome instance for speech recognition.
+    Carolina.fn('abort');
+
+    // Clean the current stream while the service on start in still activated most use case to use it, it when you use stream speaking.
+    Carolina.fn('cleanStream');
+
+    // This function represent the status of our library if it health contion, qulity of the service and configuration watch.
+    Carolina.fn('doctor');
     </script>
 ```
 
