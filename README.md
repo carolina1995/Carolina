@@ -39,6 +39,7 @@ How to use this library
             debug: true,
             continuous: false,
             interimResults: false,
+            maxAlternatives: 1,
             quality: 1, // Should be 0 or 1, when 0 is the most poor quality and 1 is the heights.
             // The callbacks are the lifecycle of the carolina voice recognition service and thier name is very explnatory so there is no point to describe each of them.
             callbacks: {
@@ -53,7 +54,8 @@ How to use this library
                 onNoMatch: function (args) { console.log('ON_NO_MATCH:: Callback => ', args); },
                 onSoundEnd: function (args) { console.log('ON_SOUND_END:: Callback => ', args); },
                 onSpeechStart: function (args) { console.log('ON_SPEECH_START:: Callback => ', args); },
-                onSpeechEnd: function (args) { console.log('ON_SPEECH_END:: Callback => ', args); }
+                onSpeechEnd: function (args) { console.log('ON_SPEECH_END:: Callback => ', args); },
+                onBadQuality: function (args) { console.log('ON_BAD_QUALITY:: Callback => ', args); }
             }
         });
 

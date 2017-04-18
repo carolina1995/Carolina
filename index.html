@@ -8,13 +8,17 @@
 </head>
 
 <body>
-    <script src="../dist/carolina.min.js"></script>
+    <!--<script src="../dist/carolina.min.js"></script>-->
+    <script src="../src/carolina.js"></script>
 
     <script>
         Carolina.init({
             lang: 'he',
             debug: true,
             quality: 1,
+            maxAlternatives: 5,
+            continuous: false,
+            interimResults: false,
             callbacks: {
                 context: this,
                 onStart: function (args) { console.log('ON_START:: Callback => ', args); },
@@ -27,6 +31,7 @@
                 onSoundEnd: function (args) { console.log('ON_SOUND_END:: Callback => ', args); },
                 onSpeechStart: function (args) { console.log('ON_SPEECH_START:: Callback => ', args); },
                 onSpeechEnd: function (args) { console.log('ON_SPEECH_END:: Callback => ', args); },
+                onBadQuality: function (args) { console.log('ON_BAD_QUALITY:: Callback => ', args); }
             }
         });
 
