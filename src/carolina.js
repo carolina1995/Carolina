@@ -22,6 +22,21 @@
         LIB_NAME: 'CAROLINA'
     }
 
+
+    const LOG_LEVEL = {
+        NO_LOGS: 0,
+        INFO_MODE: 1,
+        DEBUG_MODE: 2,
+        ULTRA_DEBUG_MODE: 3
+    }
+
+
+    const QUALITY = {
+        GOOD: 1,
+        BAD: 0
+    }
+
+
     // API Event functions.
     const ON_RESULT = 'ON_RESULT';
 
@@ -37,7 +52,7 @@
         */
         this.properties = {
             options: {},
-            isDebug: false,
+            logLevel: 0,
             errorCount: 0,
             isListening: false,
             finalTranscript: '',
@@ -64,8 +79,8 @@
             this.getProp('options'),
             {
                 lang: options.lang || 'en-US',
-                debug: options.debug || false,
-                quality: options.quality || 1,
+                logLevel: ('number' === typeof options.logLevel ? options.logLevel : LOG_LEVEL.INFO_MODE),
+                quality: ('number' !== typeof options.quality ? options.quality : QUALITY.GOOD),
                 continuous: options.continuous || false,
                 interimResults: options.interimResults || false,
                 maxAlternatives: options.maxAlternatives || 1,
@@ -73,10 +88,9 @@
             });
 
         // Create logger for this class.
-        this.logger = logger.create(Lib.CLASS, mergeOptions.debug);
+        this.logger = logger.create(Lib.CLASS, mergeOptions.logLevel);
 
-        this.setProp('options', mergeOptions)
-            .setProp('isDebug', 'boolean' === typeof options.debug ? options.debug : false); // Set debug mode indicator from configuration settings.
+        this.setProp('options', mergeOptions);
 
         return this;
     }
@@ -114,7 +128,7 @@
             return;
         }
 
-        this.logger.debug('Setting new value for ' + prop + ' => ', value);
+        this.logger.silly('Setting new value for ' + prop + ' => ', value);
 
         this.properties[prop] = value;
 
@@ -167,23 +181,50 @@
     }
 
 
+    Lib.prototype.doctor = function () {
+        var doctorReport = 'Library ' + METADATA.LIB_NAME + ' v' + METADATA.VERSION
+            +
+            '\n'
+            +
+            `Log level is ${this.getProp('options').logLevel ? 'ON' : 'OFF'} `
+            +
+            '\n'
+            +
+            `Configuration details are: ${this.optionsToString()}`
+            +
+            '\n'
+            +
+            `Library health condition ${this.getProp('errorCount') > 3 ? 'POOR' : 'GOOD'}`
+            +
+            '\n'
+            +
+            `Quality of speaking ${this.getProp('options').quality === QUALITY.GOOD ? 'GOOD' : 'POOR'}`
+
+        this.logger.info(doctorReport);
+    }
+
+
     /**
      * Carolina generic inner library logger.
      *
      * @param {*} fnClass
-     * @param {*} isDebug
+     * @param {*} logLevel
      */
-    function logger(fnClass, isDebug) {
+    function logger(fnClass, logLevel) {
         this.methodNames = {
             debug: 'debug',
             info: 'info',
             error: 'error',
             warn: 'warn'
         }
-        this.isDebug = isDebug;
+        this.logLevel = logLevel;
         this.fnClass = fnClass;
 
         this.printLog = function (type, msg, args) {
+            if ('undefined' === typeof this.logLevel || this.logLevel === LOG_LEVEL.NO_LOGS) {
+                return;
+            }
+
             if ('function' !== typeof console[type]) {
                 console.error('Trying to you console log with unknown console type => ', type);
                 return;
@@ -202,13 +243,13 @@
     logger.CLASS = 'logger';
 
 
-    logger.create = function (fnClass, isDebug) {
-        return new logger(fnClass, isDebug);
+    logger.create = function (fnClass, logLevel) {
+        return new logger(fnClass, logLevel);
     }
 
 
     logger.prototype.debug = function (msg, ...args) {
-        if (!this.isDebug) {
+        if (this.logLevel < LOG_LEVEL.DEBUG_MODE) {
             return;
         }
 
@@ -217,7 +258,7 @@
 
 
     logger.prototype.info = function (msg, ...args) {
-        if (!this.isDebug) {
+        if (this.logLevel < LOG_LEVEL.INFO_MODE) {
             return;
         }
 
@@ -226,7 +267,7 @@
 
 
     logger.prototype.error = function (msg, ...args) {
-        if (!this.isDebug) {
+        if (this.logLevel < LOG_LEVEL.INFO_MODE) {
             return;
         }
 
@@ -235,11 +276,19 @@
 
 
     logger.prototype.warn = function (msg, ...args) {
-        if (!this.isDebug) {
+        if (this.logLevel < LOG_LEVEL.INFO_MODE) {
             return;
         }
 
         this.printLog(this.methodNames.warn, msg, args);
+    }
+
+    logger.prototype.silly = function (msg, ...args) {
+        if (this.logLevel < LOG_LEVEL.ULTRA_DEBUG_MODE) {
+            return;
+        }
+
+        this.printLog(this.methodNames.debug, msg, args);
     }
 
 
@@ -296,7 +345,7 @@
          * @param {any} config 
          */
         function init(config) {
-            this.logger = logger.create(browserVoiceRecognition.CLASS, lib.getProp('isDebug'));
+            this.logger = logger.create(browserVoiceRecognition.CLASS, lib.getProp('options').logLevel);
 
             // If the browser is not support kill this execution script as soon as possible.
             if (!speechRecognition(root)) {
@@ -309,7 +358,8 @@
                     lang: config.lang,
                     continuous: config.continuous,
                     interimResults: config.interimResults,
-                    maxAlternatives: config.maxAlternatives
+                    maxAlternatives: config.maxAlternatives,
+                    quality: config.quality
                 });
         }
 
@@ -332,9 +382,9 @@
          * Initialize the voice webkit chrome instance and configure it.
          *
          * @function
-         * @param {any} config
+         * @param {any} voiceRecCfg
          */
-        function initVoiceRecognitionBrowser(config) {
+        function initVoiceRecognitionBrowser(voiceRecCfg) {
             if (!!this.record) {
                 this.logger.error('You cannot initialized the webkit speech recognition twice!, you should kill the current instance and initialized again.');
                 return;
@@ -346,14 +396,14 @@
 
 
             // Configure browser recognition settings.
-            this.record.lang = config.lang;
-            this.record.continuous = config.continuous;
-            this.record.interimResults = config.interimResults;
-            this.record.maxAlternatives = config.maxAlternatives;
+            this.record.lang = voiceRecCfg.lang;
+            this.record.continuous = voiceRecCfg.continuous;
+            this.record.interimResults = voiceRecCfg.interimResults;
+            this.record.maxAlternatives = voiceRecCfg.maxAlternatives;
 
 
             // Set the quality of voice recognition result we send back to the user.
-            this.quality = config.quality || 1;
+            this.quality = voiceRecCfg.quality;
 
 
             /**
@@ -598,7 +648,12 @@
                         // Append the new factory functions into export global variable.
                         root.Carolina[fn] = ptfactory.functions[fn];
                     });
+
+                    root.Carolina.doctor = lib.doctor.bind(lib);
                 });
+
+            // Print all about the configuration and status of the library after initialize complete.
+            lib.doctor();
         }
     }
 })(window);
