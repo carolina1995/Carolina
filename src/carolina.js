@@ -452,7 +452,7 @@
             this.logger.debug('Live stream of transcript => ', currentTranscript);
 
             lib
-                .setProp('finalTranscript', properties.finalTranscript + chunkTranscript)
+                .setProp('finalTranscript', currentTranscript)
                 .invokeCallbacks(EVENTS.ON_LIVE_STREAM, currentTranscript);
         }
 
