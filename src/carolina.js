@@ -625,8 +625,87 @@
     }
 
 
-    root.Carolina = {
+    /**
+ * Class for voice recognition that support webapp.
+ * 
+ * @class
+ * @returns
+ */
+    function webviewVoiceRecognition() {
+        var _this = this;
+        // Cordova plugin for webapps voice recognition support.
+        this.record;
 
+
+        /**
+         * 
+         * @param {any} webviewVoiceRecognitionCfg 
+         */
+        function init(webviewVoiceRecognitionCfg) {
+            this.logger = logger.create(webviewVoiceRecognition.CLASS, lib.getProp('options').logLevel);
+
+            // Check if the user added the speech recognition plugin as soon as possible.
+            if (!root.plugins.speechRecognition) {
+                this.logger.error('For ios and webapps you should have install the speechRecognition plugin.');
+                return null;
+            }
+
+            options.lang = webviewVoiceRecognitionCfg.lang;
+        }
+
+
+        /**
+         * 
+         * @param {any} args 
+         */
+        function onResult(args) {
+        }
+
+
+        /**
+         * 
+         * @param {any} args 
+         */
+        function onEnd(args) {
+            invokeCallbacks(EVENTS.ON_END, args);
+        }
+
+
+        /**
+         * 
+         * @param {any} args 
+         */
+        function onError(args) {
+            invokeCallbacks(EVENTS.ON_ERROR, args);
+        }
+
+
+        init.call(_this, config);
+
+        return {
+            start: function () {
+                _this.record.startListening(onResult, onError);
+            },
+            abort: function () {
+                _this.record.stopListening(onEnd, onError);
+            },
+            stop: function () {
+                _this.record.stopListening(onEnd, onError);
+            }
+        }
+    }
+
+
+    webviewVoiceRecognition.CLASS = 'webviewVoiceRecognition';
+
+
+    // Create the instance not via new.
+    webviewVoiceRecognition.create = function (config) {
+        return new webviewVoiceRecognition(config);
+    }
+
+
+    root.Carolina = {
         /**
          * Initialization function getting configuration from client and invoke the library.
          * You can read in our docs about the initialization parameters.
