@@ -37,7 +37,8 @@
         'stop',
         'abort',
         'isListening',
-        'doctor'
+        'doctor',
+        'isSupportVoiceRecognition'
     ];
 
 
@@ -66,7 +67,8 @@
             errorCount: 0,
             isListening: false,
             finalTranscript: '',
-            lastTranscriptSentence: ''
+            lastTranscriptSentence: '',
+            isSupportVoiceRecognition: true
         }
         this.methodNames = {
             initialize: 'initialize',
@@ -77,6 +79,7 @@
             optionsToString: 'optionsToString',
             doctor: 'doctor',
             isListening: 'isListening',
+            isSupportVoiceRecognition: 'isSupportVoiceRecognition'
         }
         this.logger;
         this.factory = {};
@@ -126,7 +129,7 @@
             //browser
             if (!standalone && safari) {
                 this.logger.error('Apple not giving any way to use speech recognition via browser.');
-                throw 'Cannot use library due to user platform device. (ios , browser)';
+                this.setProp('isSupportVoiceRecognition', false);
             } else if (standalone && !safari) {
                 //standalone
             } else if (!standalone && !safari) {
@@ -226,6 +229,11 @@
 
     Lib.prototype.isListening = function () {
         return this.getProp('isListening');
+    }
+
+
+    Lib.prototype.isSupportVoiceRecognition = function() {
+        return this.getProp('isSupportVoiceRecognition');
     }
 
 
@@ -375,7 +383,8 @@
             // If the browser is not support kill this execution script as soon as possible.
             if (!speechRecognition(root)) {
                 this.logger.error('Your browser is not support webkit speech recognition.');
-                return null;
+                this.setProp('isSupportVoiceRecognition', false);
+                return;
             }
 
             initVoiceRecognitionBrowser.call(this,
@@ -676,7 +685,8 @@
             // Check if the user added the speech recognition plugin as soon as possible.
             if (!root.plugins.speechRecognition) {
                 this.logger.error('For ios and webapps you should have install the speechRecognition plugin.');
-                return null;
+                this.setProp('isSupportVoiceRecognition', false);
+                return;
             }
 
             this.record = root.plugins.speechRecognition;
