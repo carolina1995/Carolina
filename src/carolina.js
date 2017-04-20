@@ -111,7 +111,7 @@
                 //standalone
             } else if (!standalone && !safari) {
                 //uiwebview
-                factoryVoiceRec = webviewVoiceRecognition.create(this.getProp('options'));
+                this.factory.functions = webviewVoiceRecognition.create(this.getProp('options'));
             };
         } else {
             //not iOS
