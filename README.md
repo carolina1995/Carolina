@@ -1,11 +1,27 @@
-# Carolina Voice Recognition.
+# Carolina.js
+
+<img src="https://cloud.githubusercontent.com/assets/23419176/25229312/688d9f9c-25d8-11e7-8939-bc95584dce2c.png" align="right" />
+> Easily convert speech voice to text!
 
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badge/)
+
+Library Support
+---------------
+Android-Browser: We Support Chrome, Firefox, Default Android Browser.
+Android-Cordova: Fully Supported
+IOS-Browser: Not Supported
+IOS-Cordova: Fully Supported
 
 
 Library Introduction
 ---------------
-Tiny library only 4KB!
+Very tiny library only 10KB!.
+
+This lib will make your life easy when we speaking about the new hot topic for today voice recognition,
+
+with only simple callback we will delivery full lifecycle of user interaction with voice recognition.
+
+This is an open source library an any one can fork it use it or add a issue and we will fix.
 
 
 Getting Started
@@ -30,17 +46,17 @@ npm i gulp -g
 gulp
 ```
 
-How to use this library
+How to initialize the library
 ---------------
 ```
     <script>
         Carolina.init({
-            lang: 'he',
-            debug: true,
+            lang: 'en-GB',
+            logLevel: 2, // 0 is NO_LOGS , 1 INFO_MODE, 2 DEBUG_MODE, 3 ULTRA_DEBUG_MODE.
             continuous: false,
             interimResults: false,
             maxAlternatives: 1,
-            quality: 1, // Should be 0 or 1, when 0 is the most poor quality and 1 is the heights.
+            quality: 1, // 0 is BAD QUALITY result capture and 1 is GOOD QUALITY result capture.
             // The callbacks are the lifecycle of the carolina voice recognition service and thier name is very explnatory so there is no point to describe each of them.
             callbacks: {
                 context: this,
@@ -64,21 +80,21 @@ How to use this library
 
     <script>
     // API!
-
     // Start the service the browser will ask for the right premission.
     Carolina.fn('start');
+
 
     // Stop the service and call the onEnd event.
     Carolina.fn('stop');
 
+
     // Abort same as the stop behavior , stop the service and kill the webkit chrome instance for speech recognition.
     Carolina.fn('abort');
 
-    // Clean the current stream while the service on start in still activated most use case to use it, it when you use stream speaking.
-    Carolina.fn('cleanStream');
 
     // A flag that represent when the service is active and listening to user.
     Carolina.fn('isListening');
+
 
     // This function represent the status of our library if it health contion, qulity of the service and configuration watch.
     Carolina.fn('doctor');
@@ -88,12 +104,4 @@ How to use this library
 Test & Coverage
 ---------------
 
-A healthy application is a tested one ;),
-For unit test with Mocha, Chai, Isparta(coverage)
-
-```gulp
-# Run in cmd or whatever tool your kick in gulp task
-gulp coverage
-
-This well create a coverage folder, and run all unit test in the test root folder.
-```
+Soon.
