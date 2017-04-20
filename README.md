@@ -78,29 +78,29 @@ How to initialize the library
             }
         });
 
-        Carolina.fn('start');
+        Carolina.start();
     </script>
 
     <script>
     // API!
     // Start the service the browser will ask for the right premission.
-    Carolina.fn('start');
+    Carolina.start();
 
 
     // Stop the service and call the onEnd event.
-    Carolina.fn('stop');
+    Carolina.stop();
 
 
     // Abort same as the stop behavior , stop the service and kill the webkit chrome instance for speech recognition.
-    Carolina.fn('abort');
+    Carolina.abort();
 
 
     // A flag that represent when the service is active and listening to user.
-    Carolina.fn('isListening');
+    Carolina.isListening();
 
 
     // This function represent the status of our library if it health contion, qulity of the service and configuration watch.
-    Carolina.fn('doctor');
+    Carolina.doctor();
     </script>
 ```
 
