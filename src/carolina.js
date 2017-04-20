@@ -17,6 +17,7 @@
         ON_BAD_QUALITY: 'onBadQuality'
     }
 
+
     const METADATA = {
         VERSION: '1.0.0',
         LIB_NAME: 'CAROLINA'
@@ -29,6 +30,15 @@
         DEBUG_MODE: 2,
         ULTRA_DEBUG_MODE: 3
     }
+
+
+    const API_FUNCTIONS = [
+        'start',
+        'stop',
+        'abort',
+        'isListening',
+        'doctor'
+    ];
 
 
     const QUALITY = {
@@ -57,6 +67,16 @@
             isListening: false,
             finalTranscript: '',
             lastTranscriptSentence: ''
+        }
+        this.methodNames = {
+            initialize: 'initialize',
+            run: 'run',
+            setProp: 'setProp',
+            getProp: 'getProp',
+            invokeCallbacks: 'invokeCallbacks',
+            optionsToString: 'optionsToString',
+            doctor: 'doctor',
+            isListening: 'isListening',
         }
         this.logger;
         this.factory = {};
@@ -201,6 +221,11 @@
             `Quality of speaking ${this.getProp('options').quality === QUALITY.GOOD ? 'GOOD' : 'POOR'}`
 
         this.logger.info(doctorReport);
+    }
+
+
+    Lib.prototype.isListening = function () {
+        return this.getProp('isListening');
     }
 
 
@@ -656,10 +681,12 @@
 
             this.record = root.plugins.speechRecognition;
 
-            lib.initialize.call(this, {
-                lang: webviewVoiceRecognitionCfg.lang,
-                matches: webviewVoiceRecognitionCfg.maxAlternatives,
-            });
+            Object.assign({},
+                lib.getProp.call(this, 'options'),
+                {
+                    lang: webviewVoiceRecognitionCfg.lang,
+                    matches: webviewVoiceRecognitionCfg.maxAlternatives,
+                });
         }
 
 
@@ -733,6 +760,7 @@
                             }
 
                             lib.setProp.call(_this, hasPermission);
+                            lib.setProp('isListening', true);
                             _this.record.startListening(onResult.bind(_this), onError, lib.getProp.call(_this, 'options'));
                             return false; // We are artificail pass the grant permission step. very ugly for now.
                         })
@@ -750,9 +778,11 @@
                 _this.record.startListening(onResult.bind(_this), onError, lib.getProp.call(_this, 'options'));
             },
             abort: function () {
+                lib.setProp('isListening', false);
                 _this.record.stopListening(onEnd, onError);
             },
             stop: function () {
+                lib.setProp('isListening', false);
                 _this.record.stopListening(onEnd, onError);
             }
         }
@@ -776,11 +806,6 @@
          * @function
          */
         init: function (options) {
-            if ('undefined' !== typeof lib) {
-                lib.logger.error('You can init only once.');
-                return;
-            }
-
             lib = Lib.create();
 
             lib
@@ -791,11 +816,21 @@
                         root.Carolina[fn] = ptfactory.functions[fn];
                     });
 
-                    root.Carolina.doctor = lib.doctor.bind(lib);
+                    // Expose public api functions on the export global variable.
+                    API_FUNCTIONS.map(function (fn) {
+                        if ('function' === typeof root.Carolina[fn]) {
+                            return;
+                        }
+
+                        root.Carolina[fn] = !!lib[fn] ? lib[fn].bind(lib) : undefined;
+                    });
                 });
 
             // Print all about the configuration and status of the library after initialize complete.
             lib.doctor();
+
+            // After finish initialize carolina library we remove the ability to init again.
+            delete root.Carolina.init;
         }
     }
 })(window);
