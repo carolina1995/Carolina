@@ -559,9 +559,13 @@
          * @function
          */
         function onError(event) {
+            var errorCount = lib.getProp('errorCount');
+
             // Increase the library error counter this should represent the library condition health.
+            errorCount++;
+            
             lib
-                .setProp('errorCount', lib.getProp('errorCount')++)
+                .setProp('errorCount', errorCount)
                 .setProp('isListening', false);
 
             this.logger.error('An error been occured => ', event);
@@ -834,7 +838,7 @@
                             return;
                         }
 
-                        root.Carolina[fn] = !!lib[fn] ? lib[fn].bind(lib) : undefined;
+                        root.Carolina[fn] = !!lib[fn] ? lib[fn].bind(lib) : function() {};
                     });
                 });
 
