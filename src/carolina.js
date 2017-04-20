@@ -232,7 +232,7 @@
     }
 
 
-    Lib.prototype.isSupportVoiceRecognition = function() {
+    Lib.prototype.isSupportVoiceRecognition = function () {
         return this.getProp('isSupportVoiceRecognition');
     }
 
@@ -821,10 +821,12 @@
             lib
                 .initialize(options)
                 .run(function (ptfactory) {
-                    Object.keys(ptfactory.functions).map(function (fn) {
-                        // Append the new factory functions into export global variable.
-                        root.Carolina[fn] = ptfactory.functions[fn];
-                    });
+                    if (ptfactory.functions) {
+                        Object.keys(ptfactory.functions).map(function (fn) {
+                            // Append the new factory functions into export global variable.
+                            root.Carolina[fn] = ptfactory.functions[fn];
+                        });
+                    }
 
                     // Expose public api functions on the export global variable.
                     API_FUNCTIONS.map(function (fn) {
