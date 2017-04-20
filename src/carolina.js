@@ -111,7 +111,7 @@
                 //standalone
             } else if (!standalone && !safari) {
                 //uiwebview
-                // factoryVoiceRec = webviewSupportVoiceRecognition.prototype.create();
+                factoryVoiceRec = webviewVoiceRecognition.create(this.getProp('options'));
             };
         } else {
             //not iOS
@@ -626,15 +626,19 @@
 
 
     /**
- * Class for voice recognition that support webapp.
- * 
- * @class
- * @returns
- */
+     * Class for voice recognition that support webapp.
+     * 
+     * @class
+     * @returns
+     */
     function webviewVoiceRecognition() {
         var _this = this;
         // Cordova plugin for webapps voice recognition support.
         this.record;
+        this.properties = {
+            hasPermission: false,
+            options: {}
+        }
 
 
         /**
@@ -650,7 +654,44 @@
                 return null;
             }
 
-            options.lang = webviewVoiceRecognitionCfg.lang;
+            this.record = root.plugins.speechRecognition;
+
+            lib.initialize.call(this, {
+                lang: webviewVoiceRecognitionCfg.lang,
+                matches: webviewVoiceRecognitionCfg.maxAlternatives,
+            });
+        }
+
+
+        /**
+         * Check if the user has premission already.
+         * 
+         * @returns 
+         */
+        function hasPermission() {
+            return new Promise(function (resolve, reject) {
+                this.record.hasPermission(function (hasPremission) {
+                    resolve(hasPremission);
+                },
+                    reject(lib.invokeCallbacks(EVENTS.ON_ERROR))
+                );
+            });
+        }
+
+
+        /**
+         * Grant from the user the premission to use his device mic.
+         * 
+         * @returns 
+         */
+        function requestPermission() {
+            return new Promise(function (resolve, reject) {
+                this.record.requestPermission(
+                    resolve(true),
+                    function (args) {
+                        reject(lib.invokeCallbacks(EVENTS.ON_ERROR));
+                    })
+            });
         }
 
 
@@ -667,7 +708,7 @@
          * @param {any} args 
          */
         function onEnd(args) {
-            invokeCallbacks(EVENTS.ON_END, args);
+            lib.invokeCallbacks(EVENTS.ON_END, args);
         }
 
 
@@ -676,7 +717,7 @@
          * @param {any} args 
          */
         function onError(args) {
-            invokeCallbacks(EVENTS.ON_ERROR, args);
+            lib.invokeCallbacks(EVENTS.ON_ERROR, args);
         }
 
 
@@ -684,7 +725,29 @@
 
         return {
             start: function () {
-                _this.record.startListening(onResult, onError);
+                if (!lib.getProp.call(_this, 'hasPermission')) {
+                    hasPermission()
+                        .then(function (hasPermission) {
+                            if (!hasPermission) {
+                                return requestPermission();
+                            }
+
+                            lib.setProp.call(_this, hasPermission);
+                            _this.record.startListening(onResult.bind(_this), onError, lib.getProp.call(_this, 'options'));
+                            return false; // We are artificail pass the grant permission step. very ugly for now.
+                        })
+                        .then(function (grantPermission) {
+                            if (!grantPermission) {
+                                return;
+                            }
+
+                            _this.record.startListening(onResult.bind(_this), onError, lib.getProp.call(_this, 'options'));
+                        });
+
+                    return;
+                }
+
+                _this.record.startListening(onResult.bind(_this), onError, lib.getProp.call(_this, 'options'));
             },
             abort: function () {
                 _this.record.stopListening(onEnd, onError);
