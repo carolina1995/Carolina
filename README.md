@@ -8,8 +8,11 @@
 Library Support
 ---------------
 -Android-Browser: We Support Chrome, Firefox, Default Android Browser.
+
 -Android-Cordova: Fully Supported
+
 -IOS-Browser: Not Supported
+
 -IOS-Cordova: Fully Supported
 
 
