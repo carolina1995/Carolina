@@ -52,7 +52,11 @@
     const ON_RESULT = 'ON_RESULT';
 
 
-    var lib;
+    var emptyFn = function() {};
+
+
+    var lib,
+        profiler;
 
 
     function Lib() {
@@ -328,34 +332,56 @@
     /**
      * Function invoke profiler for monitoring preformence.
      */
-    function profilerHandler(method) {
-        var _start,
-            _end;
-
-        return {
-            start: function () {
-                _start = new Date();
-            },
-
-            end: function () {
-                _end = new Date();
-                var duration = _end.getTime() - _start.getTime();
-
-                logger('debug', `${method} took ${duration} ms to execute`);
-            }
+    function profilerHandler() {
+        this.properties = {
+            start: null,
+            end: null,
+            profilingMethod: 'Default'
         }
+        this.methodNames = {
+            start: 'start',
+            end: 'end'
+        }
+        this.logger;
+
     }
 
 
-    profilerHandler.prototype.create = function (method) {
-        if (!properties.isDebug) {
-            return {
-                start: function () { },
-                end: function () { }
-            }
+    profilerHandler.CLASS = 'profilerHandler';
+
+
+    profilerHandler.create = function (method) {
+        return new profilerHandler(method);
+    }
+
+
+    profilerHandler.prototype.initialize = function (options) {
+        if (options.logLevel < LOG_LEVEL.DEBUG_MODE) {
+            this.__proto__.start = emptyFn;
+            this.__proto__.end = emptyFn;
+            return this;
         }
 
-        return new profilerHandler(method);
+        this.logger = logger.create(profilerHandler.CLASS, options.logLevel);
+        return this;
+    }
+
+
+    profilerHandler.prototype.start = function () {
+        this.properties.start = new Date();
+    }
+
+
+    profilerHandler.prototype.end = function () {
+        this.properties.end = new Date();
+        var duration = this.properties.end.getTime() - this.properties.start.getTime();
+        this.logger.debug(`${this.properties.profilingMethod} took ${duration} ms to execute`);
+    }
+
+
+    profilerHandler.prototype.setFunctionName = function(fnName) {
+        this.properties.profilingMethod = fnName;
+        return this;
     }
 
 
@@ -563,7 +589,7 @@
 
             // Increase the library error counter this should represent the library condition health.
             errorCount++;
-            
+
             lib
                 .setProp('errorCount', errorCount)
                 .setProp('isListening', false);
@@ -773,7 +799,7 @@
                                 return requestPermission();
                             }
 
-                            lib.setProp.call(_this, hasPermission);
+                            this.hasPermission = hasPermission;
                             lib.setProp('isListening', true);
                             _this.record.startListening(onResult.bind(_this), onError, lib.getProp.call(_this, 'options'));
                             return false; // We are artificail pass the grant permission step. very ugly for now.
@@ -821,6 +847,12 @@
          */
         init: function (options) {
             lib = Lib.create();
+            profiler = profilerHandler.create().initialize({
+                logLevel: options.logLevel
+            }).setFunctionName('init')
+
+            // Start the examination profiler runtime.
+            profiler.start();
 
             lib
                 .initialize(options)
@@ -838,7 +870,7 @@
                             return;
                         }
 
-                        root.Carolina[fn] = !!lib[fn] ? lib[fn].bind(lib) : function() {};
+                        root.Carolina[fn] = !!lib[fn] ? lib[fn].bind(lib) : emptyFn;
                     });
                 });
 
@@ -847,6 +879,9 @@
 
             // After finish initialize carolina library we remove the ability to init again.
             delete root.Carolina.init;
+
+            // End the examination profiler runtime.
+            profiler.end();
         }
     }
 })(window);
