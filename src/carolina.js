@@ -1,62 +1,53 @@
 (function (root) {
     'use strict';
-
-    // Callbacks constants.
-    const EVENTS = {
-        ON_START: 'onStart',
-        ON_END: 'onEnd',
-        ON_ERROR: 'onError',
-        ON_LIVE_STREAM: 'onLiveStream',
-        ON_CHUNK_STREAM: 'onChunkStream',
-        ON_INTERIM_TRANSCRIPT: 'onInterimTranscript',
-        ON_SOUND_START: 'onSoundStart',
-        ON_NO_MATCH: 'onNoMatch',
-        ON_SOUND_END: 'onSoundEnd',
-        ON_SPEECH_START: 'onSpeechStart',
-        ON_SPEECH_END: 'onSpeechEnd',
-        ON_BAD_QUALITY: 'onBadQuality'
-    }
-
-
-    const METADATA = {
-        VERSION: '1.0.0',
-        LIB_NAME: 'CAROLINA'
-    }
-
-
-    const LOG_LEVEL = {
-        NO_LOGS: 0,
-        INFO_MODE: 1,
-        DEBUG_MODE: 2,
-        ULTRA_DEBUG_MODE: 3
-    }
-
-
-    const API_FUNCTIONS = [
-        'start',
-        'stop',
-        'abort',
-        'isListening',
-        'doctor',
-        'isSupportVoiceRecognition'
-    ];
-
-
-    const QUALITY = {
-        GOOD: 1,
-        BAD: 0
-    }
-
-
-    // API Event functions.
-    const ON_RESULT = 'ON_RESULT';
-
-
-    var emptyFn = function() {};
-
-
     var lib,
-        profiler;
+        profiler,
+
+        EVENTS = {
+            ON_START: 'onStart',
+            ON_END: 'onEnd',
+            ON_ERROR: 'onError',
+            ON_LIVE_STREAM: 'onLiveStream',
+            ON_CHUNK_STREAM: 'onChunkStream',
+            ON_INTERIM_TRANSCRIPT: 'onInterimTranscript',
+            ON_SOUND_START: 'onSoundStart',
+            ON_NO_MATCH: 'onNoMatch',
+            ON_SOUND_END: 'onSoundEnd',
+            ON_SPEECH_START: 'onSpeechStart',
+            ON_SPEECH_END: 'onSpeechEnd',
+            ON_BAD_QUALITY: 'onBadQuality'
+        },
+
+        METADATA = {
+            VERSION: '1.0.1',
+            LIB_NAME: 'CAROLINA'
+        },
+
+        LOG_LEVEL = {
+            NO_LOGS: 0,
+            INFO_MODE: 1,
+            DEBUG_MODE: 2,
+            ULTRA_DEBUG_MODE: 3
+        },
+
+        API_FUNCTIONS = [
+            'start',
+            'stop',
+            'abort',
+            'isListening',
+            'doctor',
+            'isSupportVoiceRecognition'
+        ],
+
+        QUALITY = {
+            GOOD: 1,
+            BAD: 0
+        },
+
+        // API Event functions.
+        ON_RESULT = 'ON_RESULT',
+
+        emptyFn = function () { };
 
 
     function Lib() {
@@ -379,7 +370,7 @@
     }
 
 
-    profilerHandler.prototype.setFunctionName = function(fnName) {
+    profilerHandler.prototype.setFunctionName = function (fnName) {
         this.properties.profilingMethod = fnName;
         return this;
     }
